@@ -1,4 +1,4 @@
-# k3s-ansible-role
+# ansiblle-k3s-raspberry
 
 Build a Raspberry Pi Kubernetes cluster using Ansible with k3s. It works under `Ubuntu 21.04`, and probably some other recent Ubuntu/Debian versions.
 
