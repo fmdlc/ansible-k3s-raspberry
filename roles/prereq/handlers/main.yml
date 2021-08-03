@@ -1,0 +1,6 @@
+---
+- name: reboot
+  reboot:
+
+- name: restart sshd
+  service: name={{ sshd.service_name }} state=restarted

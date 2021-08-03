@@ -1,0 +1,37 @@
+---
+- name: Set hostname
+  hostname:
+    name: "{{ inventory_hostname }}"
+
+- name: Generate /etc/hosts file
+  template: 
+    src: '../templates/etc/hosts.j2' 
+    dest: '/etc/hosts' 
+    owner: root 
+    group: root 
+    mode: 0644
+  tags: etc_hosts
+
+- name: Enable IPv4 forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    state: present
+    reload: yes
+
+- name: Enable IPv6 forwarding
+  sysctl:
+    name: net.ipv6.conf.all.forwarding
+    value: "1"
+    state: present
+    reload: yes
+  when: ansible_all_ipv6_addresses
+
+- name: Configure network
+  template:
+    src: '../templates/etc/netplan/50-cloud-init.yaml.j2'
+    dest: '/etc/netplan/50-cloud-init.yaml'
+    owner: root
+    group: root
+    mode: 0644
+  notify: reboot

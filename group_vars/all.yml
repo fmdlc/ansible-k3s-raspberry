@@ -1,0 +1,16 @@
+---
+ansible_user: ubuntu
+extra_server_args: ""
+extra_agent_args: ""
+network:
+  dns:
+    - 192.168.5.1
+    - 4.2.2.1
+    - 8.8.8.8
+sshd:
+  service_name: sshd
+  service_config: /etc/ssh/sshd_config
+
+k3s:
+  version: v1.19.13+k3s1
+  extra_args: "--no-deploy traefik,servicelb"

@@ -1,0 +1,52 @@
+---
+- name: Download k3s and install on first master
+  shell: curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s.version }}" sh -s - server --cluster-init "{{ k3s.extra_args }}"
+  when: inventory_hostname == play_hosts[0]
+
+- name: Wait for node-token
+  wait_for:
+    path: /var/lib/rancher/k3s/server/node-token
+  when: inventory_hostname == play_hosts[0]
+
+- name: Read node-token from master
+  slurp:
+    src: /var/lib/rancher/k3s/server/node-token
+  register: node_token
+  when: inventory_hostname == play_hosts[0]
+
+- name: Store Master node-token
+  set_fact:
+    token: "{{ node_token.content | b64decode | regex_replace('\n', '') }}"
+  when: inventory_hostname == play_hosts[0]
+
+- name: Download k3s the others masters 
+  shell: |
+    curl -sfL https://get.k3s.io | \ 
+      INSTALL_K3S_VERSION="{{ k3s.version }}" \
+      K3S_URL=https://{{ hostvars[play_hosts[0]]['ansible_default_ipv4']['address'] }}:6443 \
+      K3S_TOKEN={{ hostvars[play_hosts[0]].token }} \
+      sh -s - server
+  when: inventory_hostname != play_hosts[0]
+
+- name: Create directory .kube
+  file:
+    path: ~{{ ansible_user }}/.kube
+    state: directory
+    owner: "{{ ansible_user }}"
+    mode: "u=rwx,g=rx,o="
+
+- name: Copy config file to user home directory
+  copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: ~{{ ansible_user }}/.kube/config
+    remote_src: yes
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "u=rw,g=,o="
+
+- name: Replace https://localhost:6443 by https://master-ip:6443
+  command: >-
+    kubectl config set-cluster default
+      --server=https://"{{ hostvars[inventory_hostname]['ansible_default_ipv4']['address'] }}":6443
+      --kubeconfig ~/.kube/config
+  changed_when: true
