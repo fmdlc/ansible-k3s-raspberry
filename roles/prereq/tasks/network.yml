@@ -4,13 +4,12 @@
     name: "{{ inventory_hostname }}"
 
 - name: Generate /etc/hosts file
-  template: 
-    src: '../templates/etc/hosts.j2' 
-    dest: '/etc/hosts' 
-    owner: root 
-    group: root 
+  template:
+    src: 'hosts.j2'
+    dest: '/etc/hosts'
+    owner: root
+    group: root
     mode: 0644
-  tags: etc_hosts
 
 - name: Enable IPv4 forwarding
   sysctl:
@@ -29,7 +28,7 @@
 
 - name: Configure network
   template:
-    src: '../templates/etc/netplan/50-cloud-init.yaml.j2'
+    src: '50-cloud-init.yaml.j2'
     dest: '/etc/netplan/50-cloud-init.yaml'
     owner: root
     group: root

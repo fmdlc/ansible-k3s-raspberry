@@ -1,0 +1,33 @@
+---
+- name: Install etcd
+  apt:
+    name: etcd
+    state: present
+    update_cache: true
+
+- name: Generate /etc/default/etcd file
+  template:
+    src: 'etcd.j2'
+    dest: '/etc/default/etcd'
+    owner: root
+    group: root
+    mode: 0644
+  register: etcd_service_conf
+
+- name: Change etcd data directory permissions
+  file:
+    path: "{{ etcd.data_dir }}"
+    owner: "etcd"
+    group: "etcd"
+
+- name: Enable etcd and restart etcd
+  systemd:
+    name: etcd.service
+    enabled: yes
+    state: started
+
+- name: Restart etcd service if config changes
+  service:
+    name: etcd
+    state: restarted
+  when: etcd_service_conf.changed

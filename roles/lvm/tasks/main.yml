@@ -1,0 +1,46 @@
+---
+- name: Create a volume group on top of the volume with physical extent size = 33MB
+  lvg:
+    state: present
+    vg: "{{ lvm.vg.name }}"
+    pvs: "{{ lvm.pv.disk }}"
+    pesize: "{{ lvm.pv.extend_size | default('32MB') }}"
+
+- name: Create a logical volume the size of all remaining space in the volume group and resizefs
+  lvol:
+    vg: "{{ lvm.vg.name }}"
+    lv: "{{ item.lv_name }}"
+    size: "{{ item.lv_size }}"
+    resizefs: true
+  with_items: "{{ lvm.lv }}"
+
+- name: Create filesystems
+  filesystem:
+    fstype: "{{ item.fs }}"
+    dev: "/dev/{{ lvm.vg.name }}/{{ item.lv_name }}"
+    resizefs: no
+    force: no
+  with_items: "{{ lvm.lv }}"
+
+- name: Create mounting poings
+  file:
+    path: "{{ item.mount_point }}"
+    state: directory
+    mode: "{{ item.perms }}"
+  with_items: "{{ lvm.lv }}"
+
+- name: Mount filesystems
+  mount:
+    path: "{{ item.mount_point }}"
+    src: "/dev/{{ lvm.vg.name }}/{{ item.lv_name }}"
+    fstype: "{{ item.fs }}"
+    state: mounted
+  with_items: "{{ lvm.lv }}"
+
+- name: Add filesystem to /etc/fstab
+  blockinfile:
+    path: /etc/fstab
+    state: present
+    block: |
+      /dev/{{ lvm.vg.name }}/{{ item.lv_name }} {{ item.mount_point }} {{ item.fs }} defaults 0 1
+  with_items: "{{ lvm.lv }}"

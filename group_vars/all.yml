@@ -7,10 +7,32 @@ network:
     - 192.168.5.1
     - 4.2.2.1
     - 8.8.8.8
+
+extra_pkgs:
+  - lm-sensors
+  - tcpdump
+  - sysstat
+
 sshd:
   service_name: sshd
   service_config: /etc/ssh/sshd_config
 
 k3s:
+  extra_server_args: ""
+  extra_agent_args: ""
   version: v1.19.13+k3s1
-  extra_args: "--no-deploy traefik,servicelb"
+
+etcd:
+  cluster_token: "etcd-cluster-01"
+  data_dir: "/var/lib/etcd"
+
+lvm:
+  pv:
+    disk: /dev/sda1
+    extend_size: 32MB
+  vg:
+    name: vg00
+  lv:
+    - { lv_name: "logs", lv_size: "10G", mount_point: "/var/log", perms: "0775", fs: "xfs" }
+    - { lv_name: "k3s",  lv_size: "50G", mount_point: "/var/lib/rancher/k3s", perms: "0775", fs: "xfs" }
+    - { lv_name: "etcd", lv_size: "30G", mount_point: "/var/lib/etcd", perms: "0700", fs: "xfs" }

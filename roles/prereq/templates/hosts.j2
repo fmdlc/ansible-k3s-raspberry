@@ -11,6 +11,6 @@ ff02::2     ip6-allrouters
 # Network nodes as generated through Ansible.
 {% for host in play_hosts %}
 {% if 'ansible_eth0' in hostvars[host] %}
-{{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}  {{ host }}
+{{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}  {{ host }} {{ host.split('.') | first }}
 {% endif %}
 {% endfor %}

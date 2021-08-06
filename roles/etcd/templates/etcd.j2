@@ -1,0 +1,20 @@
+# [member]
+ETCD_NAME="{{ inventory_hostname.split('.') | first }}"
+ETCD_DATA_DIR="{{ etcd.data_dir }}"
+ETCD_LISTEN_PEER_URLS=https://{{ ansible_eth0.ipv4.address }}:2380
+ETCD_LISTEN_CLIENT_URLS=https://{{ ansible_eth0.ipv4.address }}:2379,https://127.0.0.1:2379
+
+#[cluster]
+ETCD_INITIAL_ADVERTISE_PEER_URLS=https://{{ ansible_eth0.ipv4.address }}:2380
+ETCD_INITIAL_CLUSTER=node-1=https://192.168.5.201:2380,node-2=https://192.168.5.202:2380,node-3=https://192.168.5.203:2380
+ETCD_INITIAL_CLUSTER_STATE=new
+ETCD_INITIAL_CLUSTER_TOKEN=etcd-cluster-1
+ETCD_ADVERTISE_CLIENT_URLS=https://{{ ansible_eth0.ipv4.address }}:2379
+ETCD_ELECTION_TIMEOUT=5000
+ETCD_HEARTBEAT_INTERVAL=250
+
+#[TLS]
+ETCD_AUTO_TLS=true
+ETCD_PEER_AUTO_TLS=true
+ETCD_PROXY=off
+ETCD_PEER_CLIENT_CERT_AUTH=false
