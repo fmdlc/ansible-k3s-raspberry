@@ -1,4 +1,8 @@
 ---
+- name: Check if CA is locked
+  register: ca_is_locked
+  stat: path={{ etcd.ca_lock_file }} get_md5=no
+
 - name: Creates initial CA directory
   file:
     path: "{{ etcd.initial_ca_dir }}"
@@ -11,12 +15,14 @@
     dest: "{{ etcd.initial_ca_dir }}/CA.json"
     content: "{{ etcd.CA.cert | to_json }}"
     mode: 0400
+  when: not ca_is_locked.stat.exists
 
 - name: Generate CA Config file
   template:
     src: ca-config.json.j2
     dest: "{{ etcd.initial_ca_dir }}/ca-config.json"
     mode: 0400
+  when: not ca_is_locked.stat.exists
 
 - name: Execute CFSSL (Create CA)
   run_once: true
@@ -27,31 +33,33 @@
   args:
     executable: /bin/bash
   any_errors_fatal: true
-  when: inventory_hostname == play_hosts[0]
+  when: not ca_is_locked.stat.exists
 
 - name: Fetch CA
   fetch:
     src: "{{ etcd.initial_ca_dir }}/ca.pem"
     dest: /tmp/ca.pem
-  when: inventory_hostname == play_hosts[0]
+  when: inventory_hostname == play_hosts[0] and not ca_is_locked.stat.exists
 
 - name: Fetch CA key
   fetch:
     src: "{{ etcd.initial_ca_dir }}/ca-key.pem"
     dest: /tmp/ca-key.pem
-  when: inventory_hostname == play_hosts[0]
+  when: inventory_hostname == play_hosts[0] and not ca_is_locked.stat.exists
 
 - name: Copying CA
   copy:
     src: "/tmp/ca.pem/{{ play_hosts[0] }}{{ etcd.initial_ca_dir }}/ca.pem"
     dest: "{{ etcd.initial_ca_dir }}/ca.pem"
     mode: 0400
+  when: not ca_is_locked.stat.exists and not ca_is_locked.stat.exists
 
 - name: Copying CA key
   copy:
     src: "/tmp/ca-key.pem/{{ play_hosts[0] }}{{ etcd.initial_ca_dir }}/ca-key.pem"
     dest: "{{ etcd.initial_ca_dir }}/ca-key.pem"
     mode: 0400
+  when: not ca_is_locked.stat.exists
 
 - name: Execute CFSSL (Create peers certs)
   shell: |
@@ -65,3 +73,17 @@
   args:
     executable: /bin/bash
   any_errors_fatal: true
+  when: not ca_is_locked.stat.exists
+
+- name: Clean up the CSR
+  file:
+    path: "{{ inventory_hostname.split('.') |first }}.csr"
+    state: absent
+
+- name: Create CA lock file
+  copy:
+    content: "CA LOCKED: Remove and run Ansible rolle to generate certificates again."
+    dest: "{{ etcd.ca_lock_file }}"
+    mode: 0400
+    owner: root
+    group: root

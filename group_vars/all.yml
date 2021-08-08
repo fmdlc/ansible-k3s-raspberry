@@ -1,36 +1,108 @@
 ---
+## - ansible_user:
+##     User to connect to the remote hosts.
 ansible_user: ubuntu
 
+##
+## - network
+## .   Networking related configuration
+## .   These values are used to configure an external DNS provider with
+## .   netplan.
 network:
   dns:
     - 192.168.5.1
     - 4.2.2.1
     - 8.8.8.8
 
+##
+## - required_pkgs:
+## .   Packages required for this Playbook to run.
+## .   Please don't remove them.
+##
 required_pkgs:
   - golang-cfssl
 
+##
+## - extra_pkgs:
+## .   Optional packages. They're not needed to run this Playbook.
+##
 extra_pkgs:
   - lm-sensors
   - tcpdump
   - sysstat
 
+##
+## sshd:
+## .  Hardening parameters. Includes the daemon name and the configuration.
+##    file.
+##
 sshd:
   service_name: sshd
   service_config: /etc/ssh/sshd_config
 
+##
+## k3s:
+## .  Configuration for the k3s services.
+## .  extra_server_args: Use this parameter to add additional arguments to the server
+## .                     startup (use the --parameter=value format or --parameter).
+## .  extra_agent_args: Use this parameter to add additional arguments to the server
+##                      startup (use the --parameter=value format or --parameter).
+##    disablle_svc: A list with services to be dissablled by k3s.
+##    version: K3s version to install or upgrade.
 k3s:
   data_dir: "/var/lib/rancher/k3s"
   extra_server_args: ""
   extra_agent_args: ""
+  disable_svc: "servicelb,traefik"
   version: v1.19.13+k3s1
 
+##
+## etcd:
+## . etcd reated configuration.
+##
 etcd:
+  ##
+  ## cluster_token:
+  ## .  In order to create the initial cluster we need to define a token.
+  ##    update only if you want to recreate your custer
+  ##
   cluster_token: "etcd-cluster-01"
   data_dir: "/var/lib/etcd"
+  ##
+  ## initial_nodes:
+  ## .  Update this variable to configure the initial custer nodes.
+  ##
+  initial_nodes: "node-1=https://node-1:2380,node-2=https://node-2:2380,node-3=https://node-3:2380"
+  ##
+  ## data_store_endpoint:
+  ## .  Define nodes where k3s must connect to make use of etcd.
+  data_store_endpoint: "https://node-1:2379,https://node-2:2379,https://node-3:2379"
+  ##
+  ## data_dir:
+  ## .  Directory where TLS certificates are generated and stored.
+  ##
   initial_ca_dir: "/etc/etcd/tls"
+  ##
+  ## cluster health configuration:
+  ##
   election_timeout: 5000
   heartbeat_interval: 250
+  ##
+  ## ca_lock_file:
+  ##    Change only if you know what you're doing!.
+  ##    The Ansible CA lockfile prevents playbooks to regenerate the TLS certificates
+  ##    required for etcd to connect.
+  ##
+  ##    Remove this file and run Playbooks again if you wish this behavior, otherwise
+  ##    keep it safe and don't remove it.
+  ##
+  ##    A new one will be created in the next Ansble run in case it doesn't exist.
+  ##
+  ca_lock_file: "/root/ansible-ca.lock"
+  ##
+  ## CA:
+  ##   CA certificate configuration.
+  ##
   CA:
     cert:
       CN: "CA"
@@ -38,6 +110,11 @@ etcd:
         algo: rsa
         size: 2048
     expirity: 43800h
+  ##
+  ## client:
+  ##   etcd peer certificate configuration.
+  ## . Those certificates are used by etcd and k3s process to join a new node to the clluster.
+  ##
   client:
     cert:
       CN: "{{ inventory_hostname }}"
@@ -45,6 +122,13 @@ etcd:
         algo: rsa
         size: 2048
 
+##
+## lvm:
+## .  LVM configuration.
+## .  disk represents the device where to create the VG "vg00" where the volumes defined in the
+## .  lv map will be created with the configured parameters.
+## .  If you need to add a new volume on master update the map according to your need.
+##
 lvm:
   pv:
     disk: /dev/sda1

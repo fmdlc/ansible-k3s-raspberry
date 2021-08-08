@@ -34,13 +34,5 @@
     path: "{{ item.mount_point }}"
     src: "/dev/{{ lvm.vg.name }}/{{ item.lv_name }}"
     fstype: "{{ item.fs }}"
-    state: mounted
-  with_items: "{{ lvm.lv }}"
-
-- name: Add filesystem to /etc/fstab
-  blockinfile:
-    path: /etc/fstab
     state: present
-    block: |
-      /dev/{{ lvm.vg.name }}/{{ item.lv_name }} {{ item.mount_point }} {{ item.fs }} defaults 0 1
   with_items: "{{ lvm.lv }}"

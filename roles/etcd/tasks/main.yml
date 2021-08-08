@@ -28,7 +28,7 @@
     - { src: "etcd_env.sh", dest: "/root/etcd_env.sh", mode: 755 }
   notify: Restart etcd.service
 
-- name: Enable etcd and restart etcd
+- name: Enable etcd
   systemd:
     name: etcd.service
     enabled: yes

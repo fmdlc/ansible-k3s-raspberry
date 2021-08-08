@@ -1,3 +1,3 @@
 ---
 - name: Restart etcd.service
-  service: name=etcd.service state=restarted
+  service: name=etcd state=restarted

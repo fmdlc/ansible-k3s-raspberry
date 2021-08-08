@@ -6,12 +6,15 @@
     replace: '#\1\2\3swap\4'
     backup: yes
 
-- name: Mount /var/log and /var/tmp as tmpfs
-  blockinfile:
-    path: /etc/fstab
+- name: Mount up device by UUID
+  mount:
+    path: "{{ item.mount_point }}"
+    src: "{{ item.dev }}"
+    fstype: "{{ item.fs }}"
+    opts: "{{ item.options }}"
     state: present
-    block: |
-      tmpfs /var/log tmpfs defaults 0 0
-      tmpfs /var/tmp tmpfs nodev,nosuid,size=50M 0 0
-  notify: restart
+  with_items:
+    - { dev: "tmpfs", mount_point: "/tmp", fs: "tmpfs", options: "defaults,nosuid,nodev,noexec,mode=755,size=50M" }
+    - { dev: "tmpfs", mount_point: "/var/log", fs: "tmpfs", options: "defaults,nosuid,nodev,noexec,mode=755" }
   when: "'master' not in group_names"
+  notify: reboot

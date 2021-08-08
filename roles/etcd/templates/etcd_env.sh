@@ -1,5 +1,8 @@
 #!/bin/bash
-# Usage: $: source ./etcd_env.sh
+
+## Use this script to load etcd environment in order to make easy the use
+## of etcdctl.
+## Usage: $: source ./etcd_env.sh
 
 export ETCDCTL_API=3
 export ETCDCTL_CACERT="{{ etcd.initial_ca_dir }}/ca.pem"
