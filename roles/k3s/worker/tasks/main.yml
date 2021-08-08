@@ -6,3 +6,4 @@
       K3S_URL=https://"{{ hostvars[groups['master'][0]]['ansible_eth0']['ipv4']['address'] }}":6443 \
       K3S_TOKEN={{ hostvars[groups['master'][0]]['token'] }} \
       sh -s - agent
+  when: k3s_is_running is not defined

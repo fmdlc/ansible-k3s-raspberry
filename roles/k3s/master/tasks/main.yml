@@ -1,4 +1,9 @@
 ---
+- name: Getting process IDs of the k3s process
+  pids:
+      name: k3s
+  register: k3s_is_running
+
 - name: Download k3s and install on first master
   run_once: true
   shell: |
@@ -16,6 +21,7 @@
       "{{ k3s.extra_server_args }}"
   args:
     executable: /bin/bash
+  when: k3s_is_running is not defined
 
 - name: Wait for node-token
   wait_for:
@@ -49,3 +55,4 @@
       --disable "{{ k3s.disable_svc }}"
   args:
     executable: /bin/bash
+  when: k3s_is_running is not defined

@@ -21,12 +21,14 @@ network:
 ##
 required_pkgs:
   - golang-cfssl
+  - python3-psutil
 
 ##
 ## - extra_pkgs:
 ## .   Optional packages. They're not needed to run this Playbook.
 ##
 extra_pkgs:
+  - ccze
   - lm-sensors
   - tcpdump
   - sysstat

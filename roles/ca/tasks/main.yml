@@ -87,3 +87,4 @@
     mode: 0400
     owner: root
     group: root
+  when: not ca_is_locked.stat.exists
