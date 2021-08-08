@@ -1,8 +1,17 @@
 # ansible-k3s-raspberry
 
 Build a Raspberry Pi Kubernetes cluster using Ansible with k3s. It works under `Ubuntu 21.04`, and probably some other recent Ubuntu/Debian versions.
+This Role runs some hardening for the SSH service, creates the CA certificate and node certificates, installs etcd and creates the cluster.
 
-This Role runs some hardening for the SSH service.
+## Working environment
+
+This Role is used to bootstrap my local 5 nodes Raspberry Pi Cluster under `Ubuntu 21.04`, and it isn't supposed to be working on yours without changing some of the logic.
+
+![Raspberry Pi](./img/cluster-1.jpeg)
+
+Each of the master nodes has an SSD disk attached to it (by using the USB 3.0 interface in the Raspberry Pi), all the other workers nodes only uses the SD card and all the I/O intensive operations (like log writting, or the K3s datadir has been moved to `tmpfs`).
+
+![Diagram](./img/diagram.png)
 
 ## Installation
 
