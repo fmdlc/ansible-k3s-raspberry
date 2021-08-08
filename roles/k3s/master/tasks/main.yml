@@ -1,7 +1,14 @@
 ---
 - name: Download k3s and install on first master
   shell: |
-    curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="{{ k3s.version }}" sh -s - server --cluster-init
+    curl -sfL https://get.k3s.io | \
+      INSTALL_K3S_VERSION="{{ k3s.version }}" \
+      K3S_DATASTORE_ENDPOINT="https://node-1:2379,https://node-2:2379,https://node-3:2379" \
+      sh -s - server --cluster-init --data-dir {{ k3s.data_dir }} \
+      --datastore-cafile {{ etcd.initial_ca_dir }}/ca.pem \
+      --datastore-certfile {{ etcd.initial_ca_dir }}/{{ inventory_hostname.split('.') | first }}.pem \
+      --datastore-keyfile	{{ etcd.initial_ca_dir }}/{{ inventory_hostname.split('.') | first }}-key.pem
+
   when: inventory_hostname == play_hosts[0]
 
 - name: Wait for node-token
@@ -26,14 +33,18 @@
       INSTALL_K3S_VERSION="{{ k3s.version }}" \
       K3S_URL=https://{{ hostvars[play_hosts[0]]['ansible_default_ipv4']['address'] }}:6443 \
       K3S_TOKEN={{ hostvars[play_hosts[0]].token }} \
-      K3S_DATASTORE_ENDPOINT="http://node-1.k3s.tty0.guru:2379,http://node-2.k3s.tty0.guru:2370,http://node-3.tty0.guru:2379"
-      sh -s - server --data-dir  "/var/lib/rancher/k3s"
+      K3S_DATASTORE_ENDPOINT="https://node-1:2379,https://node-2:2379,https://node-3:2379" \
+      sh -s - server --data-dir  {{ k3s.data_dir }} \
+      --datastore-cafile {{ etcd.initial_ca_dir }}/ca.pem \
+      --datastore-certfile {{ etcd.initial_ca_dir }}/{{ inventory_hostname.split('.') | first }}.pem \
+      --datastore-keyfile	{{ etcd.initial_ca_dir }}/{{ inventory_hostname.split('.') | first }}-key.pem
+
   when: inventory_hostname != play_hosts[0]
 
 - name: Create directory .kube
   file:
     path: ~{{ ansible_user }}/.kube
-    state: directoryu
+    state: directory
     owner: "{{ ansible_user }}"
     mode: "u=rwx,g=rx,o="
 

@@ -1,6 +1,7 @@
 ---
 - name: Download K3s on workers nodes
   shell: |
+    set -o pipefail
     curl -sfL https://get.k3s.io | \
       INSTALL_K3S_VERSION="{{ k3s.version }}" \
       K3S_URL=https://"{{ hostvars[groups['master'][0]]['ansible_eth0']['ipv4']['address'] }}":6443 \

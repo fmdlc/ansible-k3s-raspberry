@@ -10,6 +10,7 @@
   become: yes
   roles:
     - role: lvm
+    - role: ca
     - role: etcd
     - role: k3s/master
 

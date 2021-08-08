@@ -1,0 +1,63 @@
+---
+- name: Creates initial CA directory
+  file:
+    path: "{{ etcd.initial_ca_dir }}"
+    state: directory
+    recurse: true
+    mode: 0700
+
+- name: Generate CA Request file
+  copy:
+    dest: "{{ etcd.initial_ca_dir }}/CA.json"
+    content: "{{ etcd.CA.cert | to_json }}"
+    mode: 0400
+
+- name: Generate CA Config file
+  template:
+    src: ca-config.json.j2
+    dest: "{{ etcd.initial_ca_dir }}/ca-config.json"
+    mode: 0400
+
+- name: Execute CFSSL (Create CA)
+  run_once: true
+  shell: |
+    cd {{ etcd.initial_ca_dir }}
+
+    cfssl gencert -initca CA.json | cfssljson -bare ca -
+  any_errors_fatal: true
+  when: inventory_hostname == play_hosts[0]
+
+- name: Fetch CA
+  fetch:
+    src: "{{ etcd.initial_ca_dir }}/ca.pem"
+    dest: /tmp/ca.pem
+  when: inventory_hostname == play_hosts[0]
+
+- name: Fetch CA key
+  fetch:
+    src: "{{ etcd.initial_ca_dir }}/ca-key.pem"
+    dest: /tmp/ca-key.pem
+  when: inventory_hostname == play_hosts[0]
+
+- name: Copying CA
+  copy:
+    src: "/tmp/ca.pem/{{ play_hosts[0] }}{{ etcd.initial_ca_dir }}/ca.pem"
+    dest: "{{ etcd.initial_ca_dir }}/ca.pem"
+    mode: 0400
+
+- name: Copying CA key
+  copy:
+    src: "/tmp/ca-key.pem/{{ play_hosts[0] }}{{ etcd.initial_ca_dir }}/ca-key.pem"
+    dest: "{{ etcd.initial_ca_dir }}/ca-key.pem"
+    mode: 0400
+
+- name: Execute CFSSL (Create peers certs)
+  shell: |
+    cd {{ etcd.initial_ca_dir }};
+
+    echo '{{ etcd.client.cert | to_json }}' | \
+      cfssl gencert -config=ca-config.json \
+      -ca=ca.pem -ca-key=ca-key.pem \
+      -hostname="{{ inventory_hostname.split('.') | first }},{{ inventory_hostname }},{{ ansible_default_ipv4.address }}" - | \
+      cfssljson -bare {{ inventory_hostname.split('.') | first }}
+  any_errors_fatal: true

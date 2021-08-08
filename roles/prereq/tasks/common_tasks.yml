@@ -6,10 +6,12 @@
 
 - name: Install packages
   apt:
-    name: "{{ item }}"
+    name: "{{ pkg }}"
     state: present
     update_cache: False
-  with_items: "{{ extra_pkgs }}"
+  with_items: "{{ required_pkgs + extra_pkgs }}"
+  loop_control:
+    loop_var: pkg
 
 - name: Check if a reboot is needed
   register: reboot_required_file

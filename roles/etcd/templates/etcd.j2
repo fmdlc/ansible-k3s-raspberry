@@ -1,20 +1,26 @@
-# [member]
-ETCD_NAME="{{ inventory_hostname.split('.') | first }}"
+# [GENERAL CONFIG]
 ETCD_DATA_DIR="{{ etcd.data_dir }}"
-ETCD_LISTEN_PEER_URLS=https://{{ ansible_eth0.ipv4.address }}:2380
-ETCD_LISTEN_CLIENT_URLS=https://{{ ansible_eth0.ipv4.address }}:2379,https://127.0.0.1:2379
+ETCD_ELECTION_TIMEOUT={{ etcd.election_timeout }}
+ETCD_HEARTBEAT_INTERVAL={{ etcd.heartbeat_interval }}
+ETCD_NAME="{{ inventory_hostname.split('.') | first }}"
 
-#[cluster]
-ETCD_INITIAL_ADVERTISE_PEER_URLS=https://{{ ansible_eth0.ipv4.address }}:2380
-ETCD_INITIAL_CLUSTER=node-1=https://192.168.5.201:2380,node-2=https://192.168.5.202:2380,node-3=https://192.168.5.203:2380
+# [MEMBER CONFIG]
+ETCD_LISTEN_PEER_URLS="https://{{ ansible_eth0.ipv4.address }}:2380"
+ETCD_LISTEN_CLIENT_URLS="https://{{ ansible_eth0.ipv4.address }}:2379"
+
+# [CLLUSTER CONFIG]
 ETCD_INITIAL_CLUSTER_STATE=new
-ETCD_INITIAL_CLUSTER_TOKEN=etcd-cluster-1
-ETCD_ADVERTISE_CLIENT_URLS=https://{{ ansible_eth0.ipv4.address }}:2379
-ETCD_ELECTION_TIMEOUT=5000
-ETCD_HEARTBEAT_INTERVAL=250
+ETCD_INITIAL_CLUSTER_TOKEN="{{ etcd.cluster_token }}"
 
-#[TLS]
-ETCD_AUTO_TLS=true
-ETCD_PEER_AUTO_TLS=true
-ETCD_PROXY=off
-ETCD_PEER_CLIENT_CERT_AUTH=false
+ETCD_INITIAL_CLUSTER="node-1=https://node-1:2380,node-2=https://node-2:2380,node-3=https://node-3:2380"
+ETCD_INITIAL_ADVERTISE_PEER_URLS="https://{{ ansible_eth0.ipv4.address }}:2380"
+ETCD_ADVERTISE_CLIENT_URLS="https://{{ ansible_eth0.ipv4.address }}:2379"
+
+# [TLS CONFIG]
+ETCD_TRUSTED_CA_FILE="{{ etcd.initial_ca_dir }}/ca.pem"
+ETCD_CERT_FILE="{{ etcd.initial_ca_dir }}/{{ inventory_hostname.split('.') | first }}.pem"
+ETCD_KEY_FILE="{{ etcd.initial_ca_dir }}/{{ inventory_hostname.split('.') | first }}-key.pem"
+
+ETCD_PEER_TRUSTED_CA_FILE="{{ etcd.initial_ca_dir }}/ca.pem"
+ETCD_PEER_KEY_FILE="{{ etcd.initial_ca_dir }}/{{ inventory_hostname.split('.') | first }}-key.pem"
+ETCD_PEER_CERT_FILE="{{ etcd.initial_ca_dir }}/{{ inventory_hostname.split('.') | first }}.pem"

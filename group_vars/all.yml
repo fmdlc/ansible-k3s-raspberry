@@ -1,12 +1,14 @@
 ---
 ansible_user: ubuntu
-extra_server_args: ""
-extra_agent_args: ""
+
 network:
   dns:
     - 192.168.5.1
     - 4.2.2.1
     - 8.8.8.8
+
+required_pkgs:
+  - golang-cfssl
 
 extra_pkgs:
   - lm-sensors
@@ -18,6 +20,7 @@ sshd:
   service_config: /etc/ssh/sshd_config
 
 k3s:
+  data_dir: "/var/lib/rancher/k3s"
   extra_server_args: ""
   extra_agent_args: ""
   version: v1.19.13+k3s1
@@ -25,6 +28,22 @@ k3s:
 etcd:
   cluster_token: "etcd-cluster-01"
   data_dir: "/var/lib/etcd"
+  initial_ca_dir: "/etc/etcd/tls"
+  election_timeout: 5000
+  heartbeat_interval: 250
+  CA:
+    cert:
+      CN: "CA"
+      key:
+        algo: rsa
+        size: 2048
+    expirity: 43800h
+  client:
+    cert:
+      CN: "{{ inventory_hostname }}"
+      key:
+        algo: rsa
+        size: 2048
 
 lvm:
   pv:

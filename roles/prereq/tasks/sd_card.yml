@@ -16,3 +16,5 @@
     block: |
       tmpfs /var/log tmpfs defaults 0 0
       tmpfs /var/tmp tmpfs nodev,nosuid,size=50M 0 0
+  notify: restart
+  when: "'master' not in group_names"
