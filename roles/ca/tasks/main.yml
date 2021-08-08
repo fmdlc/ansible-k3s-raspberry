@@ -21,9 +21,11 @@
 - name: Execute CFSSL (Create CA)
   run_once: true
   shell: |
+    set -o pipefail
     cd {{ etcd.initial_ca_dir }}
-
     cfssl gencert -initca CA.json | cfssljson -bare ca -
+  args:
+    executable: /bin/bash
   any_errors_fatal: true
   when: inventory_hostname == play_hosts[0]
 
@@ -53,11 +55,13 @@
 
 - name: Execute CFSSL (Create peers certs)
   shell: |
+    set -o pipefail
     cd {{ etcd.initial_ca_dir }};
-
     echo '{{ etcd.client.cert | to_json }}' | \
       cfssl gencert -config=ca-config.json \
       -ca=ca.pem -ca-key=ca-key.pem \
       -hostname="{{ inventory_hostname.split('.') | first }},{{ inventory_hostname }},{{ ansible_default_ipv4.address }}" - | \
       cfssljson -bare {{ inventory_hostname.split('.') | first }}
+  args:
+    executable: /bin/bash
   any_errors_fatal: true

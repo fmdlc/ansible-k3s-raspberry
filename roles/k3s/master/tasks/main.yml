@@ -1,14 +1,19 @@
 ---
 - name: Download k3s and install on first master
   shell: |
+    set -o pipefail
     curl -sfL https://get.k3s.io | \
       INSTALL_K3S_VERSION="{{ k3s.version }}" \
       K3S_DATASTORE_ENDPOINT="https://node-1:2379,https://node-2:2379,https://node-3:2379" \
-      sh -s - server --cluster-init --data-dir {{ k3s.data_dir }} \
+      sh -s - server \
+      --cluster-init \
+      --data-dir {{ k3s.data_dir }} \
       --datastore-cafile {{ etcd.initial_ca_dir }}/ca.pem \
       --datastore-certfile {{ etcd.initial_ca_dir }}/{{ inventory_hostname.split('.') | first }}.pem \
-      --datastore-keyfile	{{ etcd.initial_ca_dir }}/{{ inventory_hostname.split('.') | first }}-key.pem
-
+      --datastore-keyfile	{{ etcd.initial_ca_dir }}/{{ inventory_hostname.split('.') | first }}-key.pem \
+      {{ k3s.extra_server_args }}
+  args:
+    executable: /bin/bash
   when: inventory_hostname == play_hosts[0]
 
 - name: Wait for node-token
@@ -29,16 +34,20 @@
 
 - name: Download k3s the others masters
   shell: |
+    set -o pipefail
     curl -sfL https://get.k3s.io | \
       INSTALL_K3S_VERSION="{{ k3s.version }}" \
       K3S_URL=https://{{ hostvars[play_hosts[0]]['ansible_default_ipv4']['address'] }}:6443 \
       K3S_TOKEN={{ hostvars[play_hosts[0]].token }} \
       K3S_DATASTORE_ENDPOINT="https://node-1:2379,https://node-2:2379,https://node-3:2379" \
-      sh -s - server --data-dir  {{ k3s.data_dir }} \
+      sh -s - server \
+      --data-dir  {{ k3s.data_dir }} \
       --datastore-cafile {{ etcd.initial_ca_dir }}/ca.pem \
       --datastore-certfile {{ etcd.initial_ca_dir }}/{{ inventory_hostname.split('.') | first }}.pem \
       --datastore-keyfile	{{ etcd.initial_ca_dir }}/{{ inventory_hostname.split('.') | first }}-key.pem
-
+      {{ k3s.extra_server_args }}
+  args:
+    executable: /bin/bash
   when: inventory_hostname != play_hosts[0]
 
 - name: Create directory .kube

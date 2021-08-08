@@ -1,7 +1,4 @@
 ---
-- name: Disable swap for current session
-  command: swapoff -a
-
 - name: Disable swap permanently, persist reboots
   replace:
     path: /etc/fstab

@@ -55,3 +55,4 @@ lvm:
     - { lv_name: "logs", lv_size: "10G", mount_point: "/var/log", perms: "0775", fs: "xfs" }
     - { lv_name: "k3s",  lv_size: "50G", mount_point: "/var/lib/rancher/k3s", perms: "0775", fs: "xfs" }
     - { lv_name: "etcd", lv_size: "30G", mount_point: "/var/lib/etcd", perms: "0700", fs: "xfs" }
+    - { lv_name: "longhorn", lv_size: "300G", mount_point: "/var/lib/longhorn", perms: "0755", fs: "xfs" }
