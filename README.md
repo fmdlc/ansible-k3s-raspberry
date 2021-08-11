@@ -29,7 +29,7 @@ Each of the master nodes has an SSD disk attached to it (by using the USB 3.0 in
 
 #### Edit the inventory
 
-Add your Pubic SSH to desired hosts in order to enable Ansible to login, then edit the inventory (`hosts.ini`):
+Add your Public SSH to desired hosts in order to enable Ansible to login, then edit the inventory (`hosts.ini`):
 
 ```ini
 [master]
